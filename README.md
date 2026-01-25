@@ -40,3 +40,27 @@
 
 **Nota:** Solo hace UNA petición al sitio (como visitante normal).
 
+## snap_to_flatpak.sh
+
+**Propósito:** Eliminar completamente snap/snapd de sistemas Ubuntu y migrar a flatpak como alternativa universal.
+
+**Uso:**
+```bash
+sudo ./snap_to_flatpak.sh
+```
+
+**Qué hace:**
+1. Lista y elimina todos los snaps instalados
+2. Desinstala snapd y bloquea su reinstalación
+3. Limpia directorios residuales de snap
+4. Instala y configura flatpak con Flathub
+5. Ofrece reinstalar navegadores y aplicaciones comunes
+
+**Compatibilidad:** Ubuntu 20.04+, Xubuntu, Lubuntu, Kubuntu y derivados oficiales
+
+**Ejemplo:**
+```bash
+sudo ./remove-snap.sh
+```
+
+**Requisito:** Ejecutar como root (`sudo`)
