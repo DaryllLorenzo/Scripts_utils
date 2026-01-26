@@ -64,3 +64,37 @@ sudo ./remove-snap.sh
 ```
 
 **Requisito:** Ejecutar como root (`sudo`)
+
+## `unir_video_audio_salida.sh`
+
+**Propósito:** Combinar un video MP4 con un audio WebM, manejando tanto videos con audio existente como sin audio.
+
+**Uso:**
+```bash
+./unir_video_audio_salida.sh <video.mp4> <audio_final.webm> <salida.mp4>
+```
+
+**Qué hace:**
+1. Detecta automáticamente si el video de entrada tiene pista de audio
+2. **Si el video TIENE audio:**
+   - Extrae el audio original del MP4 a AAC
+   - Convierte el audio WebM a AAC
+   - Concatena ambos audios en secuencia
+   - Combina el video con el audio concatenado
+3. **Si el video NO tiene audio:**
+   - Convierte directamente el WebM a AAC
+   - Combina el video con el audio convertido
+
+**Características:**
+- Manejo automático de diferentes escenarios de audio
+- Conversión a formato compatible (AAC)
+- Limpieza automática de archivos temporales
+- Mantiene la calidad original del video (copia directa)
+
+**Ejemplo:**
+```bash
+./unir_video_audio_salida.sh video_sin_audio.mp4 narracion.webm video_final.mp4
+./unir_video_audio_salida.sh video_con_musica.mp4 voz_explicativa.webm tutorial_completo.mp4
+```
+
+**Requisitos:** `ffmpeg` y `ffprobe` instalados en el sistema
