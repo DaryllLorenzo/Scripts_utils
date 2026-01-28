@@ -24,7 +24,7 @@
 
 **Uso:**
 ```bash
-./php_researcher.sh dominio.com
+./php_research.sh dominio.com
 ```
 
 **Qué detecta:**
@@ -35,7 +35,7 @@
 
 **Ejemplo:**
 ```bash
-./php_researcher.sh example.com
+./php_research.sh example.com
 ```
 
 **Nota:** Solo hace UNA petición al sitio (como visitante normal).
@@ -60,7 +60,7 @@ sudo ./snap_to_flatpak.sh
 
 **Ejemplo:**
 ```bash
-sudo ./remove-snap.sh
+sudo ./snap_to_flatpak.sh
 ```
 
 **Requisito:** Ejecutar como root (`sudo`)
@@ -98,3 +98,44 @@ sudo ./remove-snap.sh
 ```
 
 **Requisitos:** `ffmpeg` y `ffprobe` instalados en el sistema
+
+Para agregar una descripción de tu script `n8n-docker.sh` en el README, puedes añadir la siguiente sección:
+
+---
+
+## n8n-docker.sh
+
+**Propósito:** Iniciar n8n (herramienta de automatización) usando Docker sin necesidad de permisos root (sudo).
+
+**Uso:**
+```bash
+./n8n-docker.sh
+```
+
+**Qué hace:**
+1. Crea automáticamente el directorio de datos `~/.n8n` si no existe
+2. Descarga y ejecuta la imagen oficial de n8n desde Docker Hub
+3. Expone n8n en el puerto 5678 (configurable en el script)
+4. Monta el directorio local para persistencia de datos
+5. Muestra información clara de acceso y ubicación de datos
+
+**Características:**
+- No requiere permisos de superusuario (usa Docker sin sudo)
+- Persistencia de datos en `$HOME/.n8n`
+- Contenedor temporal (se elimina al detener)
+- Interfaz interactiva en terminal
+
+**Ejemplo:**
+```bash
+chmod +x n8n-docker.sh
+./n8n-docker.sh
+```
+
+**Acceso:** Una vez ejecutado, accede a `http://localhost:5678` en tu navegador
+
+**Requisitos:**
+- Docker instalado y configurado para uso sin sudo
+- Conexión a internet para descargar la imagen
+- Permisos de ejecución en el script
+
+**Nota:** Asegúrate de que tu usuario tenga permisos para usar Docker sin sudo (generalmente añadiéndote al grupo `docker`)
