@@ -168,3 +168,49 @@ chmod +x n8n-docker.sh
 ./docker-manager.sh clean-all
 ./docker-manager.sh restart mi_contenedor
 ```
+
+## system-monitor.sh
+**Propósito:** Monitor del sistema en tiempo real con estadísticas de uso.
+
+**Uso:**
+```bash
+./system-monitor.sh
+```
+
+**Qué hace:**
+1. Muestra en tiempo real uso de CPU, memoria, disco y red
+2. Actualiza automáticamente cada segundo
+3. Registra picos máximos de uso durante la sesión
+4. Calcula estadísticas de red (descarga/subida total)
+
+**Características:**
+- Mide picos de CPU, memoria y swap
+- Calcula tráfico total de red durante la sesión
+- Detección automática de interfaz de red activa
+- Reporte final de sesion al terminar (Ctrl+C)
+
+**Ejemplo:**
+```bash
+chmod +x system-monitor.sh
+./system-monitor.sh
+```
+
+**Salida al terminar (Ctrl+C):**
+```
+TIME
+  Duration: 180 seconds (3 minutes)
+  Updates: 180
+  Frequency: 1 second(s)
+
+USAGE PEAKS
+  CPU max: 85%
+  Memory max: 72%
+  Swap max: 15%
+
+NETWORK
+  Interface: eth0
+  Total download: 45 MB
+  Total upload: 8 MB
+  Avg download: 256 KB/s
+  Avg upload: 45 KB/s
+```
