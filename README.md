@@ -139,3 +139,32 @@ chmod +x n8n-docker.sh
 - Permisos de ejecución en el script
 
 **Nota:** Asegúrate de que tu usuario tenga permisos para usar Docker sin sudo (generalmente añadiéndote al grupo `docker`)
+
+##  **docker-manager.sh**
+**Propósito:** Gestor básico de contenedores Docker
+
+**Uso:**
+```bash
+./docker-manager.sh [comando]
+```
+
+**Comandos disponibles:**
+- `list` - Listar contenedores activos
+- `list --all` - Listar todos los contenedores
+- `images` - Listar imágenes Docker
+- `volumes` - Listar volúmenes
+- `stats` - Mostrar estadísticas del sistema
+- `ports` - Ver puertos mapeados
+- `clean` - Limpiar contenedores parados
+- `clean-all` - Limpiar TODO (con confirmación)
+- `prune` - Eliminar recursos no usados
+- `restart <nombre>` - Reiniciar contenedor
+- `stop-all` - Detener todos los contenedores
+
+**Ejemplos:**
+```bash
+./docker-manager.sh list
+./docker-manager.sh stats
+./docker-manager.sh clean-all
+./docker-manager.sh restart mi_contenedor
+```
