@@ -214,3 +214,38 @@ NETWORK
   Avg download: 256 KB/s
   Avg upload: 45 KB/s
 ```
+
+## `compress_video.sh`
+
+**Propósito:** Comprimir videos con dos niveles de compresión: soft (buena calidad, menor reducción) y hard (máxima reducción, menor calidad).
+
+**Uso:**
+```bash
+./compress_video.sh <archivo_entrada> [archivo_salida]
+```
+
+**Qué hace:**
+1. Presenta un menú para elegir entre compresión soft o hard
+2. **Soft compression:** Mantiene buena calidad con reducción moderada
+   - MP4: Usa H.264 + AAC con CRF 24
+   - WebM: Usa VP9 + Opus con CRF 32
+   - Otros formatos: Convierte a MP4 con H.264
+3. **Hard compression:** Máxima reducción de tamaño, menor calidad
+   - Escala a 1280p, 24fps
+   - Elimina audio
+   - Usa CRF 32 para máxima compresión
+
+**Características:**
+- Soporte para múltiples formatos (MP4, WebM, otros)
+- Dos modos de compresión
+- Eliminación opcional de audio en modo hard
+- Optimización para streaming web (faststart)
+- Comparación de tamaños antes y después
+
+**Ejemplo:**
+```bash
+./compress_video.sh video_original.mp4 video_comprimido.mp4
+./compress_video.sh video_grande.mp4  # Usará nombre por defecto
+```
+
+**Requisitos:** `ffmpeg` instalado en el sistema
