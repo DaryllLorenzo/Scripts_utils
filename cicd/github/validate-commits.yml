@@ -1,76 +1,20 @@
 name: Validate Commit Messages
-
 on:
   push:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
   pull_request:
-    branches: [ main, master, develop ]
+    branches: [main, master, develop]
 
 jobs:
   validate-commits:
     runs-on: ubuntu-latest
-    
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        
-    - name: Setup Node.js (for commitlint)
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        
-    - name: Install commitlint
-      run: |
-        npm install --save-dev @commitlint/{config-conventional,cli}
-        
-    - name: Create commitlint config
-      run: |
-        cat > commitlint.config.js << 'EOF'
-        module.exports = {
-          extends: ['@commitlint/config-conventional'],
-          rules: {
-            'type-enum': [2, 'always', [
-              'feat', 'fix', 'docs', 'style', 'refactor',
-              'perf', 'test', 'chore', 'revert', 'ci',
-              'build', 'release'
-            ]],
-            'type-case': [2, 'always', 'lower-case'],
-            'type-empty': [2, 'never'],
-            'scope-case': [2, 'always', 'lower-case'],
-            'subject-case': [2, 'never', ['start-case', 'pascal-case', 'upper-case']],
-            'subject-empty': [2, 'never'],
-            'subject-full-stop': [2, 'never', '.'],
-            'header-max-length': [2, 'always', 100]
-          }
-        };
-        EOF
-        
-    - name: Validate commit messages
-      run: |
-        # Get all commits in the push/PR
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --format="%H")
-        else
-          COMMITS=$(git log HEAD~${{ github.event.before }}..HEAD --format="%H" 2>/dev/null || git log --format="%H" -n 1)
-        fi
-        
-        FAILED=0
-        for COMMIT in $COMMITS; do
-          echo "Validating commit: $COMMIT"
-          git show --format=%B -s $COMMIT | npx commitlint
-          if [ $? -ne 0 ]; then
-            FAILED=1
-          fi
-        done
-        
-        if [ $FAILED -eq 1 ]; then
-          echo "❌ Some commits failed validation"
-          echo "Valid commit format: type(scope): subject"
-          echo "Types: feat, fix, docs, style, refactor, perf, test, chore, revert, ci, build, release"
-          echo "Example: feat(auth): add login functionality"
-          exit 1
-        else
-          echo "✅ All commits are valid"
-        fi
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Dedicated action — handles push vs PR logic internally
+      - name: Validate commit messages
+        uses: wagoid/commitlint-github-action@v6
+        # Reads commitlint.config.js from the repo root automatically
