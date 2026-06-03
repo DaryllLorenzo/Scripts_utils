@@ -1,0 +1,132 @@
+name: Release & Versioning
+on:
+  push:
+    branches: [main, master]
+    # Only runs when actual code changes, not on every commit type
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create tags and GitHub Releases
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history required — MinVer and git-cliff need all tags
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/packages.lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      # ── Calculate next version ──────────────────────────────────────────────
+      # Reads conventional commits since the last tag and determines
+      # whether the next version is a patch, minor or major bump.
+      #   fix:              1.0.0 → 1.0.1
+      #   feat:             1.0.0 → 1.1.0
+      #   feat!: / BREAKING CHANGE:  1.0.0 → 2.0.0
+      - name: Calculate next version from conventional commits
+        id: version
+        run: |
+          # Get the latest tag (default to v0.0.0 if no tags exist yet)
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "Latest tag: $LATEST_TAG"
+
+          # Strip the 'v' prefix to work with plain semver numbers
+          CURRENT=${LATEST_TAG#v}
+          MAJOR=$(echo $CURRENT | cut -d. -f1)
+          MINOR=$(echo $CURRENT | cut -d. -f2)
+          PATCH=$(echo $CURRENT | cut -d. -f3)
+
+          # Analyze commits since last tag to determine the bump type
+          COMMITS=$(git log ${LATEST_TAG}..HEAD --format="%s %b")
+
+          BUMP="none"
+
+          # Breaking change → major bump (feat!: or BREAKING CHANGE in body)
+          if echo "$COMMITS" | grep -qE "^(feat|fix|refactor|perf)!:|BREAKING CHANGE:"; then
+            BUMP="major"
+          # New feature → minor bump
+          elif echo "$COMMITS" | grep -qE "^feat(\(.+\))?:"; then
+            BUMP="minor"
+          # Bug fix or perf → patch bump
+          elif echo "$COMMITS" | grep -qE "^(fix|perf)(\(.+\))?:"; then
+            BUMP="patch"
+          fi
+
+          echo "Bump type: $BUMP"
+
+          # Calculate the new version based on bump type
+          if [ "$BUMP" = "major" ]; then
+            NEW_VERSION="$((MAJOR + 1)).0.0"
+          elif [ "$BUMP" = "minor" ]; then
+            NEW_VERSION="${MAJOR}.$((MINOR + 1)).0"
+          elif [ "$BUMP" = "patch" ]; then
+            NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))"
+          else
+            echo "No releasable commits found — skipping release"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "New version: v${NEW_VERSION}"
+          echo "version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "should_release=true" >> $GITHUB_OUTPUT
+
+      - name: Restore dependencies
+        if: steps.version.outputs.should_release == 'true'
+        run: dotnet restore
+
+      # ── Build & verify ──────────────────────────────────────────────────────
+      # MinVer reads the git tag automatically during build and stamps
+      # the version into the assembly — no manual version files needed.
+      - name: Build with MinVer
+        if: steps.version.outputs.should_release == 'true'
+        run: |
+          # Create the tag first so MinVer can read it during build
+          git tag ${{ steps.version.outputs.tag }}
+
+          # MinVer picks up the tag automatically via the NuGet package
+          dotnet build --no-restore --configuration Release
+
+      # ── Generate changelog ──────────────────────────────────────────────────
+      # git-cliff reads conventional commits and produces a structured
+      # CHANGELOG.md grouped by type (Features, Bug Fixes, etc.)
+      - name: Generate changelog with git-cliff
+        if: steps.version.outputs.should_release == 'true'
+        uses: orhun/git-cliff-action@v3
+        with:
+          config: cliff.toml  # Config file committed to the repo (see below)
+          args: --latest --strip header
+        env:
+          OUTPUT: RELEASE_NOTES.md  # Temp file for this release's notes only
+
+      # ── Create GitHub Release ───────────────────────────────────────────────
+      # Pushes the tag to remote and creates the GitHub Release with
+      # the auto-generated release notes from git-cliff.
+      - name: Create GitHub Release
+        if: steps.version.outputs.should_release == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.tag }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
