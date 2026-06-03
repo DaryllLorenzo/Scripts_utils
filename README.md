@@ -1,6 +1,14 @@
 # Scripts Utilitarios
 
-## restore-pg-backup.sh
+## Índice
+- [Scripts de Sistema](#scripts-de-sistema)
+- [Scripts de Multimedia](#scripts-de-multimedia)
+- [Scripts de Docker](#scripts-de-docker)
+- [CI/CD Workflows](#workflows-de-cicd-github-actions)
+
+## Scripts de Sistema
+
+### restore-pg-backup.sh
 **Propósito:** Convertir backups de PostgreSQL a SQL plano usando Docker temporal.
 
 **Uso:**
@@ -19,7 +27,7 @@
 ./restore-pg-backup.sh produccion.backup
 ```
 
-## php_researcher.sh
+### php_researcher.sh
 **Propósito:** Analizar sitios web para descubrir archivos PHP expuestos (reconocimiento pasivo).
 
 **Uso:**
@@ -40,7 +48,7 @@
 
 **Nota:** Solo hace UNA petición al sitio (como visitante normal).
 
-## snap_to_flatpak.sh
+### snap_to_flatpak.sh
 
 **Propósito:** Eliminar completamente snap/snapd de sistemas Ubuntu y migrar a flatpak como alternativa universal.
 
@@ -65,7 +73,56 @@ sudo ./snap_to_flatpak.sh
 
 **Requisito:** Ejecutar como root (`sudo`)
 
-## `unir_video_audio_salida.sh`
+### system-monitor.sh
+**Propósito:** Monitor del sistema en tiempo real con estadísticas de uso.
+
+**Uso:**
+```bash
+./system-monitor.sh
+```
+
+**Qué hace:**
+1. Muestra en tiempo real uso de CPU, memoria, disco y red
+2. Actualiza automáticamente cada segundo
+3. Registra picos máximos de uso durante la sesión
+4. Calcula estadísticas de red (descarga/subida total)
+
+**Características:**
+- Mide picos de CPU, memoria y swap
+- Calcula tráfico total de red durante la sesión
+- Detección automática de interfaz de red activa
+- Reporte final de sesion al terminar (Ctrl+C)
+
+**Ejemplo:**
+```bash
+chmod +x system-monitor.sh
+./system-monitor.sh
+```
+
+**Salida al terminar (Ctrl+C):**
+```
+TIME
+  Duration: 180 seconds (3 minutes)
+  Updates: 180
+  Frequency: 1 second(s)
+
+USAGE PEAKS
+  CPU max: 85%
+  Memory max: 72%
+  Swap max: 15%
+
+NETWORK
+  Interface: eth0
+  Total download: 45 MB
+  Total upload: 8 MB
+  Avg download: 256 KB/s
+  Avg upload: 45 KB/s
+```
+
+
+## Scripts de Multimedia
+
+### `unir_video_audio_salida.sh`
 
 **Propósito:** Combinar un video MP4 con un audio WebM, manejando tanto videos con audio existente como sin audio.
 
@@ -99,11 +156,45 @@ sudo ./snap_to_flatpak.sh
 
 **Requisitos:** `ffmpeg` y `ffprobe` instalados en el sistema
 
-Para agregar una descripción de tu script `n8n-docker.sh` en el README, puedes añadir la siguiente sección:
+### `compress_video.sh`
+
+**Propósito:** Comprimir videos con dos niveles de compresión: soft (buena calidad, menor reducción) y hard (máxima reducción, menor calidad).
+
+**Uso:**
+```bash
+./compress_video.sh <archivo_entrada> [archivo_salida]
+```
+
+**Qué hace:**
+1. Presenta un menú para elegir entre compresión soft o hard
+2. **Soft compression:** Mantiene buena calidad con reducción moderada
+   - MP4: Usa H.264 + AAC con CRF 24
+   - WebM: Usa VP9 + Opus con CRF 32
+   - Otros formatos: Convierte a MP4 con H.264
+3. **Hard compression:** Máxima reducción de tamaño, menor calidad
+   - Escala a 1280p, 24fps
+   - Elimina audio
+   - Usa CRF 32 para máxima compresión
+
+**Características:**
+- Soporte para múltiples formatos (MP4, WebM, otros)
+- Dos modos de compresión
+- Eliminación opcional de audio en modo hard
+- Optimización para streaming web (faststart)
+- Comparación de tamaños antes y después
+
+**Ejemplo:**
+```bash
+./compress_video.sh video_original.mp4 video_comprimido.mp4
+./compress_video.sh video_grande.mp4  # Usará nombre por defecto
+```
+**Requisitos:** `ffmpeg` instalado en el sistema
 
 ---
 
-## n8n-docker.sh
+## Scripts de Docker
+
+### n8n-docker.sh
 
 **Propósito:** Iniciar n8n (herramienta de automatización) usando Docker sin necesidad de permisos root (sudo).
 
@@ -169,83 +260,63 @@ chmod +x n8n-docker.sh
 ./docker-manager.sh restart mi_contenedor
 ```
 
-## system-monitor.sh
-**Propósito:** Monitor del sistema en tiempo real con estadísticas de uso.
+## Workflows de CI/CD (GitHub Actions)
 
-**Uso:**
-```bash
-./system-monitor.sh
-```
+Los workflows están ubicados en `cicd/github/` y automatizan tareas de calidad de código, versionado y validación.
 
-**Qué hace:**
-1. Muestra en tiempo real uso de CPU, memoria, disco y red
-2. Actualiza automáticamente cada segundo
-3. Registra picos máximos de uso durante la sesión
-4. Calcula estadísticas de red (descarga/subida total)
-
-**Características:**
-- Mide picos de CPU, memoria y swap
-- Calcula tráfico total de red durante la sesión
-- Detección automática de interfaz de red activa
-- Reporte final de sesion al terminar (Ctrl+C)
-
-**Ejemplo:**
-```bash
-chmod +x system-monitor.sh
-./system-monitor.sh
-```
-
-**Salida al terminar (Ctrl+C):**
-```
-TIME
-  Duration: 180 seconds (3 minutes)
-  Updates: 180
-  Frequency: 1 second(s)
-
-USAGE PEAKS
-  CPU max: 85%
-  Memory max: 72%
-  Swap max: 15%
-
-NETWORK
-  Interface: eth0
-  Total download: 45 MB
-  Total upload: 8 MB
-  Avg download: 256 KB/s
-  Avg upload: 45 KB/s
-```
-
-## `compress_video.sh`
-
-**Propósito:** Comprimir videos con dos niveles de compresión: soft (buena calidad, menor reducción) y hard (máxima reducción, menor calidad).
-
-**Uso:**
-```bash
-./compress_video.sh <archivo_entrada> [archivo_salida]
-```
+### `net-code-quality.yml`
+**Propósito:** Análisis de calidad de código para proyectos .NET en cada Pull Request.
 
 **Qué hace:**
-1. Presenta un menú para elegir entre compresión soft o hard
-2. **Soft compression:** Mantiene buena calidad con reducción moderada
-   - MP4: Usa H.264 + AAC con CRF 24
-   - WebM: Usa VP9 + Opus con CRF 32
-   - Otros formatos: Convierte a MP4 con H.264
-3. **Hard compression:** Máxima reducción de tamaño, menor calidad
-   - Escala a 1280p, 24fps
-   - Elimina audio
-   - Usa CRF 32 para máxima compresión
+1. Configura .NET 8.0 y cachea paquetes NuGet
+2. Verifica el formato del código (`dotnet format`)
+3. Compila con analizadores Roslyn activados
+4. Trata warnings como errores para mantener código limpio
 
-**Características:**
-- Soporte para múltiples formatos (MP4, WebM, otros)
-- Dos modos de compresión
-- Eliminación opcional de audio en modo hard
-- Optimización para streaming web (faststart)
-- Comparación de tamaños antes y después
+**Trigger:** Se ejecuta automáticamente en cada Pull Request.
 
-**Ejemplo:**
-```bash
-./compress_video.sh video_original.mp4 video_comprimido.mp4
-./compress_video.sh video_grande.mp4  # Usará nombre por defecto
-```
+---
 
-**Requisitos:** `ffmpeg` instalado en el sistema
+### `python-code-quality.yml`
+**Propósito:** Análisis de calidad de código para proyectos Python en cada Pull Request.
+
+**Qué hace:**
+1. Ejecuta `ruff check` para detectar errores de código (linting)
+2. Verifica el formato con `ruff format --check`
+3. Realiza type checking con MyPy
+
+**Trigger:** Se ejecuta automáticamente en cada Pull Request.
+
+---
+
+### `release-versioning.yml`
+**Propósito:** Automatiza el versionado semántico y la creación de releases basándose en Conventional Commits.
+
+**Qué hace:**
+1. Analiza commits desde el último tag para determinar el tipo de bump:
+   - `fix:` → patch (1.0.0 → 1.0.1)
+   - `feat:` → minor (1.0.0 → 1.1.0)
+   - `feat!:` o `BREAKING CHANGE:` → major (1.0.0 → 2.0.0)
+2. Construye el proyecto con MinVer para versionado automático
+3. Genera changelog con `git-cliff`
+4. Crea un tag y un GitHub Release con las notas de la versión
+
+**Trigger:** Solo en pushes a `main` o `master` (ignora cambios en `.md` y `.github/`).
+
+**Requisitos:**
+- Usar Conventional Commits en los mensajes de commit
+- Tener `cliff.toml` configurado para git-cliff
+- El paquete MinVer debe estar referenciado en los `.csproj`
+
+---
+
+### `validate-commits.yml`
+**Propósito:** Valida que los mensajes de commit sigan el formato Conventional Commits.
+
+**Qué hace:**
+- Verifica que los commits cumplan con las reglas definidas en `commitlint.config.js`
+- Funciona tanto en pushes como en Pull Requests
+
+**Trigger:** En pushes y PRs a `main`, `master` y `develop`.
+
+**Requisitos:** Tener un archivo `commitlint.config.js` en la raíz del repositorio.
